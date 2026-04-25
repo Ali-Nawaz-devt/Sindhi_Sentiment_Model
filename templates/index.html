@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="sd" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>سنڌي جذبات تجزيو</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #080C14;
+      --surface:   #0E1420;
+      --surface2:  #141C2C;
+      --border:    #1E2D48;
+      --pos:       #22D3A4;
+      --neg:       #F96B6B;
+      --neu:       #FBBF24;
+      --accent:    #4F8EF7;
+      --text:      #D4E0F5;
+      --muted:     #5A7099;
+      --glow-pos:  rgba(34,211,164,.25);
+      --glow-neg:  rgba(249,107,107,.25);
+      --glow-neu:  rgba(251,191,36,.25);
+      --glow-acc:  rgba(79,142,247,.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Amiri', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient grid background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: .35;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,142,247,.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 760px; }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 5px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--pos);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 var(--glow-pos); }
+      50%      { opacity:.7; box-shadow: 0 0 0 5px transparent; }
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--pos));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ── Stats row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .stat-label { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Input card ── */
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 60px rgba(79,142,247,.06);
+    }
+    .input-label {
+      font-size: .8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Amiri', serif;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      padding: 16px 18px;
+      resize: vertical;
+      min-height: 110px;
+      direction: rtl;
+      text-align: right;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    textarea::placeholder { color: var(--muted); font-style: italic; }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow-acc);
+    }
+
+    .input-actions {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-analyze {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #2E6CE4 100%);
+      color: #fff;
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 11px 28px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(79,142,247,.35);
+    }
+    .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,142,247,.45); }
+    .btn-analyze:active { transform: translateY(0); }
+    .btn-analyze:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Amiri', serif;
+      font-size: .9rem;
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-clear:hover { border-color: var(--neg); color: var(--neg); }
+
+    .char-count {
+      margin-right: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    /* ── Samples ── */
+    .samples-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 14px;
+    }
+    .sample-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 13px;
+      font-family: 'Amiri', serif;
+      font-size: .92rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      direction: rtl;
+    }
+    .sample-chip:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Result card ── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .35s ease, transform .35s ease, border-color .35s;
+      pointer-events: none;
+    }
+    .result-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .result-card.positive { border-color: var(--pos); box-shadow: 0 0 40px var(--glow-pos); }
+    .result-card.negative { border-color: var(--neg); box-shadow: 0 0 40px var(--glow-neg); }
+    .result-card.neutral  { border-color: var(--neu); box-shadow: 0 0 40px var(--glow-neu); }
+
+    .result-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+    }
+    .sentiment-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+    .sentiment-icon.positive { background: rgba(34,211,164,.12); }
+    .sentiment-icon.negative { background: rgba(249,107,107,.12); }
+    .sentiment-icon.neutral  { background: rgba(251,191,36,.12); }
+
+    .sentiment-label {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .sentiment-label.positive { color: var(--pos); }
+    .sentiment-label.negative { color: var(--neg); }
+    .sentiment-label.neutral  { color: var(--neu); }
+    .top-confidence {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Confidence bars ── */
+    .conf-section { }
+    .conf-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .conf-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+    }
+    .conf-name {
+      width: 72px;
+      font-size: .85rem;
+      color: var(--text);
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .conf-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width .7s cubic-bezier(.4,0,.2,1);
+      width: 0;
+    }
+    .conf-bar-fill.positive { background: linear-gradient(90deg, var(--pos), #15B88A); }
+    .conf-bar-fill.negative { background: linear-gradient(90deg, var(--neg), #D94040); }
+    .conf-bar-fill.neutral  { background: linear-gradient(90deg, var(--neu), #D4870A); }
+    .conf-pct {
+      width: 46px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    /* ── History ── */
+    .history-section { margin-top: 40px; }
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px;
+      animation: slideIn .3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(-8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .hist-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .hist-dot.Positive { background: var(--pos); }
+    .hist-dot.Negative { background: var(--neg); }
+    .hist-dot.Neutral  { background: var(--neu); }
+    .hist-text {
+      flex: 1;
+      font-size: .95rem;
+      color: var(--text);
+      direction: rtl;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hist-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      padding: 2px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .hist-badge.Positive { background: rgba(34,211,164,.12); color: var(--pos); }
+    .hist-badge.Negative { background: rgba(249,107,107,.12); color: var(--neg); }
+    .hist-badge.Neutral  { background: rgba(251,191,36,.12);  color: var(--neu); }
+
+    /* ── Loader ── */
+    .loader {
+      display: none; align-items: center; gap: 6px;
+    }
+    .loader.active { display: flex; }
+    .loader-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce .8s ease-in-out infinite;
+    }
+    .loader-dot:nth-child(2) { animation-delay: .15s; }
+    .loader-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce {
+      0%,100% { transform:translateY(0); opacity:.4; }
+      50%      { transform:translateY(-6px); opacity:1; }
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 60px;
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width:500px) {
+      .stats { grid-template-columns: repeat(2,1fr); }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">ML Model · Active</div>
+    <h1>سنڌي <span>جذبات تجزيو</span></h1>
+    <p class="subtitle">
+      Sindhi Sentiment Analysis — Logistic Regression with dual TF-IDF features,
+      trained on 1,909 sentences from three corpora.
+    </p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--pos)">94.8%</div>
+      <div class="stat-label">Peak CV Accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent)">1,909</div>
+      <div class="stat-label">Training Sentences</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--neu)">37k+</div>
+      <div class="stat-label">TF-IDF Features</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#BC8CFF">3</div>
+      <div class="stat-label">Classes</div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="input-label" for="sindhi-input">// سنڌي جملو داخل ڪريو</label>
+    <textarea id="sindhi-input"
+      placeholder="هتي سنڌي متن لکو… (Write Sindhi text here)"
+      oninput="updateCharCount()"></textarea>
+
+    <!-- Sample chips -->
+    <div class="samples-row" id="samples">
+      <span class="sample-chip" onclick="setSample(this)">هي ڏينهن تمام سٺو آهي</span>
+      <span class="sample-chip" onclick="setSample(this)">هي خبر ٻڌي دل ڏکيو</span>
+      <span class="sample-chip" onclick="setSample(this)">اڄ موسم نه گرم نه ٿڌو آهي</span>
+      <span class="sample-chip" onclick="setSample(this)">محنت جو ميوو مٺو هوندو آهي</span>
+      <span class="sample-chip" onclick="setSample(this)">هي ڪم بلڪل غلط آهي</span>
+    </div>
+
+    <div class="input-actions">
+      <span class="char-count" id="char-count">0 chars</span>
+      <button class="btn-clear" onclick="clearAll()">صاف ڪريو</button>
+      <button class="btn-analyze" id="analyze-btn" onclick="analyze()">
+        <span id="btn-text">تجزيو ڪريو ›</span>
+        <span class="loader" id="loader">
+          <span class="loader-dot"></span>
+          <span class="loader-dot"></span>
+          <span class="loader-dot"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+    <div class="result-header">
+      <div class="sentiment-icon" id="result-icon">😊</div>
+      <div>
+        <div class="sentiment-label" id="result-label">Positive</div>
+        <div class="top-confidence" id="result-conf">Confidence: 92.3%</div>
+      </div>
+    </div>
+    <div class="conf-section">
+      <div class="conf-title">// confidence breakdown</div>
+      <div class="conf-row">
+        <div class="conf-name">مثبت</div>
+        <div class="conf-bar-track"><div class="conf-bar-fill positive" id="bar-pos"></div></div>
+        <div class="conf-pct" id="pct-pos">0%</div>
+      </div>
+      <div class="conf-row">
+        <div class="conf-name">منفي</div>
+        <div class="conf-bar-track"><div class="conf-bar-fill negative" id="bar-neg"></div></div>
+        <div class="conf-pct" id="pct-neg">0%</div>
+      </div>
+      <div class="conf-row">
+        <div class="conf-name">غير جانبدار</div>
+        <div class="conf-bar-track"><div class="conf-bar-fill neutral" id="bar-neu"></div></div>
+        <div class="conf-pct" id="pct-neu">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section" id="history-section" style="display:none">
+    <div class="section-title">// recent predictions</div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <footer>
+    Built by Ali Nawaz · Shaikh Ayaz University · Machine Learning 2025
+    <br>Model: Logistic Regression · sklearn · <a href="/health">/health</a>
+  </footer>
+
+</div>
+
+<script>
+  const ICONS = { Positive: '😊', Negative: '😔', Neutral: '😐' };
+  const SINDHI = { Positive: 'مثبت', Negative: 'منفي', Neutral: 'غير جانبدار' };
+  let history = [];
+
+  function updateCharCount() {
+    const n = document.getElementById('sindhi-input').value.length;
+    document.getElementById('char-count').textContent = n + ' chars';
+  }
+
+  function setSample(el) {
+    document.getElementById('sindhi-input').value = el.textContent.trim();
+    updateCharCount();
+    analyze();
+  }
+
+  function clearAll() {
+    document.getElementById('sindhi-input').value = '';
+    updateCharCount();
+    const card = document.getElementById('result-card');
+    card.classList.remove('visible','positive','negative','neutral');
+  }
+
+  async function analyze() {
+    const text = document.getElementById('sindhi-input').value.trim();
+    if (!text) return;
+
+    const btn  = document.getElementById('analyze-btn');
+    const btnT = document.getElementById('btn-text');
+    const ldr  = document.getElementById('loader');
+    btn.disabled = true;
+    btnT.style.display = 'none';
+    ldr.classList.add('active');
+
+    try {
+      const res  = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      showResult(data, text);
+      addHistory(text, data);
+    } catch(e) {
+      alert('Connection error — is the Flask server running?');
+    } finally {
+      btn.disabled = false;
+      btnT.style.display = '';
+      ldr.classList.remove('active');
+    }
+  }
+
+  function showResult(data, inputText) {
+    const s   = data.sentiment;
+    const conf = data.confidence;
+    const cls  = s.toLowerCase();
+
+    const card  = document.getElementById('result-card');
+    card.className = 'result-card visible ' + cls;
+
+    document.getElementById('result-icon').textContent  = ICONS[s];
+    document.getElementById('result-icon').className    = 'sentiment-icon ' + cls;
+    document.getElementById('result-label').textContent = SINDHI[s] + ' · ' + s;
+    document.getElementById('result-label').className   = 'sentiment-label ' + cls;
+    document.getElementById('result-conf').textContent  = 'Confidence: ' + conf[s].toFixed(1) + '%';
+
+    setTimeout(() => {
+      setBar('pos', conf['Positive']);
+      setBar('neg', conf['Negative']);
+      setBar('neu', conf['Neutral']);
+    }, 60);
+  }
+
+  function setBar(id, pct) {
+    document.getElementById('bar-' + id).style.width = pct + '%';
+    document.getElementById('pct-' + id).textContent  = pct.toFixed(1) + '%';
+  }
+
+  function addHistory(text, data) {
+    history.unshift({ text, sentiment: data.sentiment, conf: data.confidence[data.sentiment] });
+    if (history.length > 8) history.pop();
+
+    const section = document.getElementById('history-section');
+    const list    = document.getElementById('history-list');
+    section.style.display = 'block';
+    list.innerHTML = history.map(h => `
+      <div class="history-item">
+        <span class="hist-dot ${h.sentiment}"></span>
+        <span class="hist-text">${h.text}</span>
+        <span class="hist-badge ${h.sentiment}">${h.conf.toFixed(0)}% · ${h.sentiment}</span>
+      </div>`).join('');
+  }
+
+  // Enter key
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sindhi-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) analyze();
+    });
+  });
+</script>
+</body>
+</html>
