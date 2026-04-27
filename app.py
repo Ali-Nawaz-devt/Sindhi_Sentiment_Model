@@ -1,66 +1,77 @@
-from flask import Flask, request, jsonify, render_template
+import gradio as gr
 import joblib
 from scipy.sparse import hstack
-import re
-import unicodedata
+import re, unicodedata
 
-app = Flask(__name__)
+# Load model
+bundle     = joblib.load("best_model.pkl")
+clf        = bundle["clf"]
+char_vec   = bundle["char_vec"]
+word_vec   = bundle["word_vec"]
+label_map  = bundle["label_map_inv"]   # {0:'Negative', 1:'Neutral', 2:'Positive'}
 
-# ── Load model ─────────────────────────────────────────────────────────────────
-bundle = joblib.load('best_model.pkl')
-clf        = bundle['clf']
-char_vec   = bundle['char_vec']
-word_vec   = bundle['word_vec']
-label_map  = bundle['label_map_inv']   # {0:'Negative', 1:'Neutral', 2:'Positive'}
-
-# ── Preprocessing (mirrors your notebook) ─────────────────────────────────────
+# Preprocessing
 DIACRITICS = re.compile(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]')
 PUNC       = re.compile(r'[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\s]')
 
-def preprocess(text: str) -> str:
-    text = unicodedata.normalize('NFC', str(text))
-    text = DIACRITICS.sub('', text)
-    text = PUNC.sub(' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
+def preprocess(text):
+    text = unicodedata.normalize("NFC", str(text))
+    text = DIACRITICS.sub("", text)
+    text = PUNC.sub(" ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Prediction function
+def predict(text):
+    if not text.strip():
+        return "Please enter some Sindhi text.", {}
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    data = request.get_json(force=True)
-    raw_text = data.get('text', '').strip()
-    if not raw_text:
-        return jsonify({'error': 'No text provided'}), 400
-
-    clean = preprocess(raw_text)
-
-    X_word = word_vec.transform([clean])
-    X_char = char_vec.transform([clean])
-    X      = hstack([X_word, X_char])
-
+    clean  = preprocess(text)
+    X      = hstack([word_vec.transform([clean]), char_vec.transform([clean])])
     pred   = int(clf.predict(X)[0])
-    proba  = clf.predict_proba(X)[0].tolist()
+    proba  = clf.predict_proba(X)[0]
 
     label  = label_map[pred]
+    conf   = {label_map[i]: float(round(proba[i], 4)) for i in range(3)}
 
-    # Build confidence dict with proper labels
-    confidence = {}
-    for idx, prob in enumerate(proba):
-        confidence[label_map[idx]] = round(prob * 100, 2)
+    emoji  = {"Positive": "Positive 😊", "Negative": "Negative 😔", "Neutral": "Neutral 😐"}
+    return emoji[label], conf
 
-    return jsonify({
-        'sentiment': label,
-        'confidence': confidence,
-        'text_clean': clean
-    })
+# Sample sentences
+examples = [
+    ["هي ڏينهن تمام سٺو آهي"],
+    ["هي خبر ٻڌي دل ڏکيو"],
+    ["اڄ موسم نه گرم نه ٿڌو آهي"],
+    ["محنت جو ميوو مٺو هوندو آهي"],
+    ["هي ڪم بلڪل غلط آهي"],
+]
 
-@app.route('/health')
-def health():
-    return jsonify({'status': 'ok', 'model': 'Sindhi Sentiment (LR + TF-IDF)'})
+# Build the Gradio interface
+with gr.Blocks(title="سنڌي جذبات تجزيو", theme=gr.themes.Soft()) as demo:
+    gr.Markdown("""
+    # سنڌي جذبات تجزيو — Sindhi Sentiment Analysis
+    **Model:** Logistic Regression + Dual TF-IDF &nbsp;|&nbsp;
+    **Accuracy:** 94.8% CV &nbsp;|&nbsp;
+    **Classes:** Positive · Negative · Neutral  
+    *Trained on 1,909 sentences from 3 Sindhi newspaper corpora*
+    """)
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    with gr.Row():
+        with gr.Column():
+            text_input = gr.Textbox(
+                label="Enter Sindhi text / سنڌي متن",
+                placeholder="هتي سنڌي لکو…",
+                lines=3,
+                rtl=True
+            )
+            submit_btn = gr.Button("Analyse / تجزيو ڪريو", variant="primary")
+
+        with gr.Column():
+            label_out = gr.Label(label="Sentiment / جذبو")
+            conf_out  = gr.Label(label="Confidence Scores")
+
+    gr.Examples(examples=examples, inputs=text_input)
+
+    submit_btn.click(fn=predict, inputs=text_input, outputs=[label_out, conf_out])
+    text_input.submit(fn=predict, inputs=text_input, outputs=[label_out, conf_out])
+
+demo.launch()
